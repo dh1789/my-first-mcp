@@ -20,6 +20,24 @@ MCP(Model Context Protocol) 서버 개발 튜토리얼 - 첫 번째 MCP 서버
 | `reverse_string` | 문자열 뒤집기 | "hello 뒤집어줘" |
 | `get_server_info` | 서버 정보 조회 | "MCP 서버 정보" |
 
+## 스크린샷
+
+### Claude Code에서 Tool 실행
+![Claude Code Calculate Demo](assets/claude-code-calculate-demo.jpg)
+> "123 더하기 456 계산해줘" → calculate Tool 실행 → "123 + 456 = 579 입니다"
+
+### MCP 서버 자동 감지
+![MCP Auto Detection](assets/mcp-auto-detection-dialog.jpg)
+> `.mcp.json` 파일로 프로젝트 진입 시 자동 감지
+
+### MCP Inspector UI
+![MCP Inspector UI](assets/mcp-inspector-ui.jpg)
+> MCP Inspector로 서버 테스트 및 디버깅
+
+### MCP Inspector Tool 목록
+![MCP Inspector Tools](assets/mcp-inspector-tools-list.jpg)
+> 5개 Tool (get_current_time, calculate, get_random_number, reverse_string, get_server_info)
+
 ## 설치
 
 ### 요구사항
