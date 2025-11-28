@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "my-first-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {}
+    }
+  }
+}
