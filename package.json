@@ -1,0 +1,38 @@
+{
+  "name": "my-first-mcp",
+  "version": "1.0.0",
+  "description": "MCP 서버 개발 튜토리얼 - 첫 번째 MCP 서버",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "my-first-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "ai-tools"
+  ],
+  "author": "idongho",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
