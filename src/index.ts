@@ -50,6 +50,13 @@ import {
   generateExplainCodePrompt,
 } from "./prompts.js";
 
+// Day 3: Project Analyzer 로직 import
+import {
+  analyzeStructure,
+  analyzeDependencies,
+  countLines,
+} from "./project-analyzer.js";
+
 // MCP 서버 인스턴스 생성
 const server = new McpServer({
   name: "my-first-mcp",
@@ -385,6 +392,167 @@ server.prompt(
         role: m.role as "user" | "assistant",
         content: m.content,
       })),
+    };
+  }
+);
+
+// ============================================
+// Day 3: Project Analyzer Tools
+// ============================================
+
+/**
+ * Tool 6: 프로젝트 구조 분석
+ *
+ * 사용 예시:
+ * - "이 프로젝트의 구조를 분석해줘"
+ * - "src 폴더 구조 보여줘"
+ */
+server.tool(
+  "analyze_structure",
+  "프로젝트 디렉토리 구조를 분석하여 트리 형태로 보여줍니다.",
+  {
+    path: z.string().describe("분석할 디렉토리 경로"),
+    maxDepth: z
+      .number()
+      .int()
+      .min(1)
+      .max(10)
+      .optional()
+      .describe("최대 깊이 (1-10). 기본값: 전체"),
+    showHidden: z
+      .boolean()
+      .optional()
+      .describe("숨김 파일/폴더 표시 여부. 기본값: false"),
+  },
+  async ({ path: targetPath, maxDepth, showHidden }) => {
+    const result = analyzeStructure(targetPath, { maxDepth, showHidden });
+
+    if (!result.success) {
+      return {
+        content: [{ type: "text", text: `오류: ${result.error}` }],
+        isError: true,
+      };
+    }
+
+    const statsText = result.stats
+      ? `\n\n📊 통계: ${result.stats.totalFiles}개 파일, ${result.stats.totalDirs}개 폴더`
+      : "";
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `📁 ${result.path}\n\n${result.tree}${statsText}`,
+        },
+      ],
+    };
+  }
+);
+
+/**
+ * Tool 7: 의존성 분석
+ *
+ * 사용 예시:
+ * - "이 프로젝트의 의존성을 분석해줘"
+ * - "package.json 정보 보여줘"
+ */
+server.tool(
+  "analyze_dependencies",
+  "프로젝트의 package.json을 분석하여 의존성 정보를 제공합니다.",
+  {
+    path: z.string().describe("분석할 프로젝트 경로 (package.json이 있는 디렉토리)"),
+    includeDevDeps: z
+      .boolean()
+      .optional()
+      .describe("개발 의존성 포함 여부. 기본값: true"),
+  },
+  async ({ path: targetPath, includeDevDeps }) => {
+    const result = analyzeDependencies(targetPath, { includeDevDeps });
+
+    if (!result.success) {
+      return {
+        content: [{ type: "text", text: `오류: ${result.error}` }],
+        isError: true,
+      };
+    }
+
+    let text = `📦 ${result.name} v${result.version}\n`;
+    if (result.description) {
+      text += `📝 ${result.description}\n`;
+    }
+
+    if (result.dependencies && result.dependencies.length > 0) {
+      text += `\n🔗 프로덕션 의존성 (${result.dependencies.length}개):\n`;
+      result.dependencies.forEach(dep => {
+        text += `  - ${dep.name}: ${dep.version}\n`;
+      });
+    }
+
+    if (result.devDependencies && result.devDependencies.length > 0) {
+      text += `\n🛠️ 개발 의존성 (${result.devDependencies.length}개):\n`;
+      result.devDependencies.forEach(dep => {
+        text += `  - ${dep.name}: ${dep.version}\n`;
+      });
+    }
+
+    if (result.scripts && result.scripts.length > 0) {
+      text += `\n📜 스크립트 (${result.scripts.length}개):\n`;
+      result.scripts.forEach(script => {
+        text += `  - ${script.name}: ${script.command}\n`;
+      });
+    }
+
+    return {
+      content: [{ type: "text", text }],
+    };
+  }
+);
+
+/**
+ * Tool 8: 코드 라인 수 통계
+ *
+ * 사용 예시:
+ * - "이 프로젝트의 코드 라인 수를 알려줘"
+ * - "TypeScript 파일만 라인 수 세줘"
+ */
+server.tool(
+  "count_lines",
+  "프로젝트의 코드 라인 수를 분석합니다 (코드/주석/빈줄 분류).",
+  {
+    path: z.string().describe("분석할 디렉토리 경로"),
+    extensions: z
+      .array(z.string())
+      .optional()
+      .describe("분석할 확장자 목록 (예: [\"ts\", \"js\"]). 기본값: 모든 지원 확장자"),
+  },
+  async ({ path: targetPath, extensions }) => {
+    const result = countLines(targetPath, { extensions });
+
+    if (!result.success) {
+      return {
+        content: [{ type: "text", text: `오류: ${result.error}` }],
+        isError: true,
+      };
+    }
+
+    let text = `📊 코드 라인 통계\n\n`;
+    text += `📁 총 파일: ${result.totalFiles}개\n`;
+    text += `📝 총 라인: ${result.totalLines}줄\n`;
+    text += `  - 코드: ${result.codeLines}줄\n`;
+    text += `  - 주석: ${result.commentLines}줄\n`;
+    text += `  - 빈줄: ${result.blankLines}줄\n`;
+
+    if (result.byExtension && Object.keys(result.byExtension).length > 0) {
+      text += `\n📈 확장자별 통계:\n`;
+      Object.entries(result.byExtension)
+        .sort((a, b) => b[1].lines - a[1].lines)
+        .forEach(([ext, stats]) => {
+          text += `  .${ext}: ${stats.files}개 파일, ${stats.lines}줄 (코드: ${stats.codeLines}, 주석: ${stats.commentLines})\n`;
+        });
+    }
+
+    return {
+      content: [{ type: "text", text }],
     };
   }
 );
