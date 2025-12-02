@@ -3,15 +3,26 @@
 /**
  * my-first-mcp: MCP 서버 개발 튜토리얼
  *
- * 이 MCP 서버는 다음 Tool을 제공합니다:
+ * 이 MCP 서버는 다음 기능을 제공합니다:
+ *
+ * Tools (Day 1):
  * 1. get_current_time: 현재 시간 조회
  * 2. calculate: 사칙연산 계산기
  * 3. get_random_number: 랜덤 숫자 생성
  * 4. reverse_string: 문자열 뒤집기
  * 5. get_server_info: 서버 정보 조회
+ *
+ * Resources (Day 2):
+ * - server://info: 서버 정보
+ * - config://settings: 설정 정보
+ * - help://topic/{topic}: 도움말 (동적)
+ *
+ * Prompts (Day 2):
+ * - code-review: 코드 리뷰 템플릿
+ * - explain-code: 코드 설명 템플릿
  */
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
@@ -25,6 +36,19 @@ import {
   type TimeFormat,
   type Operation,
 } from "./tools.js";
+
+// Day 2: Resource 로직 import
+import {
+  getServerInfoResource,
+  getConfigResource,
+  getHelpTopic,
+} from "./resources.js";
+
+// Day 2: Prompt 로직 import
+import {
+  generateCodeReviewPrompt,
+  generateExplainCodePrompt,
+} from "./prompts.js";
 
 // MCP 서버 인스턴스 생성
 const server = new McpServer({
@@ -229,6 +253,138 @@ GitHub: https://github.com/dh1789/my-first-mcp
           text: infoText,
         },
       ],
+    };
+  }
+);
+
+// ============================================
+// Day 2: Resources
+// ============================================
+
+/**
+ * Resource 1: 서버 정보
+ *
+ * URI: server://info
+ */
+server.resource(
+  "server-info",
+  "server://info",
+  {
+    description: "MCP 서버 정보를 제공합니다",
+    mimeType: "application/json",
+  },
+  async () => {
+    const resource = getServerInfoResource();
+    return {
+      contents: [{
+        uri: resource.uri,
+        mimeType: resource.mimeType,
+        text: resource.content,
+      }],
+    };
+  }
+);
+
+/**
+ * Resource 2: 설정 정보
+ *
+ * URI: config://settings
+ */
+server.resource(
+  "config",
+  "config://settings",
+  {
+    description: "서버 설정 정보를 제공합니다",
+    mimeType: "application/json",
+  },
+  async () => {
+    const resource = getConfigResource();
+    return {
+      contents: [{
+        uri: resource.uri,
+        mimeType: resource.mimeType,
+        text: resource.content,
+      }],
+    };
+  }
+);
+
+/**
+ * Resource 3: 도움말 (동적 Resource Template)
+ *
+ * URI Template: help://topic/{topic}
+ */
+server.resource(
+  "help",
+  new ResourceTemplate("help://topic/{topic}", { list: undefined }),
+  {
+    description: "토픽별 도움말을 제공합니다 (tools, resources, prompts)",
+    mimeType: "text/plain",
+  },
+  async (uri, { topic }) => {
+    const resource = getHelpTopic(topic as string);
+    return {
+      contents: [{
+        uri: resource.uri,
+        mimeType: resource.mimeType,
+        text: resource.content,
+      }],
+    };
+  }
+);
+
+// ============================================
+// Day 2: Prompts
+// ============================================
+
+/**
+ * Prompt 1: 코드 리뷰
+ *
+ * 코드 리뷰를 요청하는 프롬프트 템플릿
+ */
+server.prompt(
+  "code-review",
+  "코드 리뷰를 요청합니다",
+  {
+    code: z.string().describe("리뷰할 코드"),
+    language: z.string().optional().describe("프로그래밍 언어"),
+    focusAreas: z.string().optional().describe("집중 리뷰 영역 (쉼표로 구분)"),
+  },
+  async ({ code, language, focusAreas }) => {
+    const result = generateCodeReviewPrompt({ code, language, focusAreas });
+    return {
+      messages: result.messages.map(m => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })),
+    };
+  }
+);
+
+/**
+ * Prompt 2: 코드 설명
+ *
+ * 코드 설명을 요청하는 프롬프트 템플릿
+ */
+server.prompt(
+  "explain-code",
+  "코드 설명을 요청합니다",
+  {
+    code: z.string().describe("설명할 코드"),
+    level: z.enum(["beginner", "intermediate", "advanced"])
+      .optional()
+      .describe("설명 수준 (beginner, intermediate, advanced)"),
+  },
+  async ({ code, level }) => {
+    const result = generateExplainCodePrompt({
+      code,
+      level: level as "beginner" | "intermediate" | "advanced" | undefined,
+    });
+    return {
+      messages: result.messages.map(m => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })),
     };
   }
 );
