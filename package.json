@@ -7,8 +7,14 @@
   "bin": {
     "my-first-mcp": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build && npm test",
     "start": "node dist/index.js",
     "dev": "tsc && node dist/index.js",
     "inspect": "npx @modelcontextprotocol/inspector dist/index.js",
@@ -19,10 +25,20 @@
     "mcp",
     "model-context-protocol",
     "claude",
-    "ai-tools"
+    "claude-code",
+    "ai-tools",
+    "typescript"
   ],
   "author": "idongho",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dh1789/my-first-mcp.git"
+  },
+  "homepage": "https://github.com/dh1789/my-first-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/dh1789/my-first-mcp/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "zod": "^3.24.0"
