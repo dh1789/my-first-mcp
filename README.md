@@ -19,6 +19,10 @@ MCP(Model Context Protocol) 서버 개발 튜토리얼 - 첫 번째 MCP 서버
 | `get_random_number` | 랜덤 숫자 생성 | "로또 번호 뽑아줘" |
 | `reverse_string` | 문자열 뒤집기 | "hello 뒤집어줘" |
 | `get_server_info` | 서버 정보 조회 | "MCP 서버 정보" |
+| `analyze_structure` | 프로젝트 구조 분석 | "프로젝트 구조 보여줘" |
+| `analyze_dependencies` | 의존성 분석 | "package.json 분석해줘" |
+| `count_lines` | 코드 라인 수 통계 | "코드 라인 수 알려줘" |
+| `server_status` | 서버 상태 조회 | "서버 상태 확인해줘" |
 
 ## 스크린샷
 
@@ -91,10 +95,14 @@ npm start
 ```
 my-first-mcp/
 ├── src/
-│   ├── index.ts      # MCP 서버 진입점
-│   ├── tools.ts      # 핵심 로직 (순수 함수)
-│   └── tools.test.ts # 유닛 테스트
-├── dist/             # 빌드 결과물
+│   ├── index.ts              # MCP 서버 진입점
+│   ├── tools.ts              # Day 1: 기본 Tool 로직
+│   ├── resources.ts          # Day 2: Resource 로직
+│   ├── prompts.ts            # Day 2: Prompt 로직
+│   ├── project-analyzer.ts   # Day 3: 프로젝트 분석기
+│   ├── advanced.ts           # Day 5: 고급 패턴 (캐싱, 보안, 로깅)
+│   └── *.test.ts             # 유닛 테스트
+├── dist/                     # 빌드 결과물
 ├── package.json
 ├── tsconfig.json
 └── vitest.config.ts
@@ -112,15 +120,21 @@ npm start         # 서버 실행
 
 ### 테스트
 
-TDD 방식으로 31개 유닛 테스트가 포함되어 있습니다:
+TDD 방식으로 120개 유닛 테스트가 포함되어 있습니다:
 
 ```bash
 npm test
 
 # 결과
-# ✓ src/tools.test.ts (31 tests) 18ms
-# Test Files  1 passed (1)
-# Tests       31 passed (31)
+# ✓ src/tools.test.ts (31 tests)
+# ✓ src/resources.test.ts (11 tests)
+# ✓ src/prompts.test.ts (13 tests)
+# ✓ src/project-analyzer.test.ts (18 tests)
+# ✓ src/advanced.test.ts (30 tests)
+# ✓ src/package-config.test.ts (14 tests)
+# ✓ src/shebang.test.ts (3 tests)
+# Test Files  7 passed (7)
+# Tests       120 passed (120)
 ```
 
 ## 기술 스택

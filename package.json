@@ -1,6 +1,6 @@
 {
   "name": "my-first-mcp",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "MCP 서버 개발 튜토리얼 - 첫 번째 MCP 서버",
   "type": "module",
   "main": "dist/index.js",

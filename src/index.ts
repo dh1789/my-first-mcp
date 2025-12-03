@@ -57,6 +57,13 @@ import {
   countLines,
 } from "./project-analyzer.js";
 
+// Day 5: 고급 패턴 import
+import {
+  getServerStatus,
+  LogLevel,
+  log,
+} from "./advanced.js";
+
 // MCP 서버 인스턴스 생성
 const server = new McpServer({
   name: "my-first-mcp",
@@ -557,10 +564,54 @@ server.tool(
   }
 );
 
+// ============================================
+// Day 5: Advanced Tools
+// ============================================
+
+/**
+ * Tool 9: 서버 상태 조회
+ *
+ * 사용 예시:
+ * - "서버 상태 확인해줘"
+ * - "메모리 사용량 알려줘"
+ */
+server.tool(
+  "server_status",
+  "MCP 서버 상태를 확인합니다 (uptime, 메모리 사용량 등).",
+  {},
+  async () => {
+    const status = getServerStatus();
+
+    const formatBytes = (bytes: number) => {
+      const mb = bytes / 1024 / 1024;
+      return `${mb.toFixed(2)} MB`;
+    };
+
+    const text = `
+=== MCP 서버 상태 ===
+
+⏱️ Uptime: ${status.uptime.toFixed(2)}초
+📦 Node.js: ${status.nodeVersion}
+
+💾 메모리 사용량:
+  - Heap Used: ${formatBytes(status.memory.heapUsed)}
+  - Heap Total: ${formatBytes(status.memory.heapTotal)}
+  - RSS: ${formatBytes(status.memory.rss)}
+`.trim();
+
+    log(LogLevel.INFO, "server_status Tool 호출됨");
+
+    return {
+      content: [{ type: "text", text }],
+    };
+  }
+);
+
 // 서버 시작
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  log(LogLevel.INFO, "my-first-mcp 서버가 시작되었습니다.");
   console.error("my-first-mcp 서버가 시작되었습니다.");
 }
 
